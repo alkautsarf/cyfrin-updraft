@@ -19,7 +19,13 @@ contract CreateSubscription is Script {
         address vrfCoordinator
     ) public returns (uint64) {
         console.log("Creating subscription on ChainId: ", block.chainid);
-        vm.startBroadcast();
+        uint256 deployerKey;
+        if(block.chainid == 31337) {
+            deployerKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        } else if(block.chainid == 11155111) {
+            deployerKey = vm.envUint("PRIVATE_KEY");
+        }
+        vm.startBroadcast(deployerKey);
         uint64 subId = VRFCoordinatorV2Mock(vrfCoordinator)
             .createSubscription();
         vm.stopBroadcast();
@@ -46,6 +52,7 @@ contract FundSubscription is Script {
             uint64 subId,
             ,
             address link
+
         ) = helperConfig.activeNetworkConfig();
         fundSubscription(vrfCoordinator, subId, link);
     }
@@ -60,14 +67,16 @@ contract FundSubscription is Script {
         console.log("On ChainId: ", block.chainid);
 
         if (block.chainid == 31337) {
-            vm.startBroadcast();
+            uint256 deployerKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+            vm.startBroadcast(deployerKey);
             VRFCoordinatorV2Mock(vrfCoordinator).fundSubscription(
                 subId,
                 FUND_AMOUNT
             );
             vm.stopBroadcast();
         } else {
-            vm.startBroadcast();
+            uint256 deployerKey = vm.envUint("PRIVATE_KEY");
+            vm.startBroadcast(deployerKey);
             LinkToken(link).transferAndCall(
                 vrfCoordinator,
                 FUND_AMOUNT,
@@ -91,15 +100,28 @@ contract AddConsumer is Script {
         console.log("Adding consumer : ", raffle);
         console.log("Using vrfCoordinator: ", vrfCoordinator);
         console.log("On ChainId: ", block.chainid);
-        vm.startBroadcast();
+        uint256 deployerKey;
+        if(block.chainid == 31337) {
+            deployerKey = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        } else if(block.chainid == 11155111) {
+            deployerKey = vm.envUint("PRIVATE_KEY");
+        }
+        vm.startBroadcast(deployerKey);
         VRFCoordinatorV2Mock(vrfCoordinator).addConsumer(subId, raffle);
         vm.stopBroadcast();
     }
 
     function addConsumerUsingConfig(address raffle) public {
         HelperConfig helperConfig = new HelperConfig();
-        (, , address vrfCoordinator, , uint64 subId, , ) = helperConfig
-            .activeNetworkConfig();
+        (
+            ,
+            ,
+            address vrfCoordinator,
+            ,
+            uint64 subId,
+            ,
+
+        ) = helperConfig.activeNetworkConfig();
         addConsumer(raffle, vrfCoordinator, subId);
     }
 
